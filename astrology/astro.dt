@@ -1,0 +1,109 @@
+ 
+
+MAIN:
+
+    answer 1
+    play "welcome.wav"
+    $var=accept("mn.wav",2,2)
+    if $var==1
+        $value="aries.html"
+    elif $var==2
+        $value="taurus.html"
+    elif $var==3
+        $value="gemini.html"
+    elif $var==4
+        $value="cancer.html"
+    elif $var==5
+        $value="leo.html"
+    elif $var==6
+        $value="virgo.html"
+    elif $var==7
+        $value="libra.html"
+    elif $var==8
+        $value="scorpio.html"
+    elif $var==9
+        $value="sagittarius.html"
+    elif $var==10
+        $value="capricon.html"
+    elif $var==11
+        $value="aquarius.html"
+    elif $var==12
+        $value="pisces.html"
+    else
+    	speak "invalid option entered"
+    	hangup
+    goto HOROSCOPE	
+    	   
+    endif
+    
+    
+:HOROSCOPE
+	$URL=format("http://www.astrology.com/horoscope/daily/%s",$value)
+	$bool=http.post($URL)
+    $txt=extractingHtml($bool,'<span class="date">','</p>')
+	speak $txt
+	wait 5
+    play "ty.wav"
+    hangup
+    goto MAIN
+
+function extractingHtml($htmlresponse,$startingkey,$endkey,$offset)
+      
+		if $offset = ""
+		    $offset = 0
+		 endif   
+		* search for the value
+		$pos = find($htmlresponse, $startingkey,$offset)
+		if $pos < 0
+			log "starting key key not found"
+			display "Starting key not found"
+			sleep 1000
+			return -1
+		endif
+		
+		
+		$pos += len($startingkey)
+		$startvalue = Mid($htmlresponse, $pos)
+		
+		$endpos = Find($htmlresponse,$endkey,$pos)
+		if $endpos < 0
+			log "end key not found"
+			display "End key not found"
+			sleep 1000
+			return -1
+		endif
+		
+		* extract value
+		$length = $endpos-$pos
+		$responsevalue = mid($startvalue,0,$length)
+		if find($responsevalue,"<br>") <> -1
+		    $responsevalue = replace($responsevalue,"<br>",concat(chr(13),chr(10)))
+		endif
+		
+	return $responsevalue
+	
+
+* User has hung up
+ONHANGUP:
+	hangup
+    goto MAIN
+
+
+* Time allowed for user is over
+ONTIMEOUT:
+ONRUNTIMEOUT:
+    hangup
+    goto MAIN
+
+
+* An error has occurred
+ONSYSTEMERROR:
+    log $error
+    display $error
+    if $debug 
+    	msgbox($error)
+    endif
+    hangup
+    goto MAIN
+
+
